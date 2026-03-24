@@ -84,4 +84,37 @@ if uploaded_file:
                         c.line(0.2*cm, 1.4*cm, width-0.2*cm, 1.4*cm)
                         c.line(2.8*cm, 1.4*cm, 2.8*cm, height-0.2*cm)
 
-                        #
+                        # Label
+                        c.setFont("Helvetica-Bold", 8)
+                        c.drawString(0.4*cm, 5.2*cm, "NCC")
+                        c.drawString(0.4*cm, 4.4*cm, "NOI NHAN")
+                        c.drawString(0.4*cm, 3.6*cm, "SO PO :")
+                        c.drawString(0.4*cm, 2.8*cm, "KIEN SO :")
+                        c.drawString(0.4*cm, 2.0*cm, "NGAY GIAO :")
+
+                        # Data
+                        c.setFont("Helvetica", 9)
+                        c.drawString(3.0*cm, 5.2*cm, str(row.get(c_ncc, '')))
+                        c.setFont("Helvetica-Bold", 10)
+                        c.drawString(3.0*cm, 4.4*cm, str(row.get(c_nhan, '')))
+                        c.setFont("Helvetica", 10)
+                        c.drawString(3.0*cm, 3.6*cm, po_display)
+                        
+                        c.setFont("Helvetica-Bold", 12)
+                        c.drawString(3.0*cm, 2.8*cm, f"{i}       /       {tk}")
+                        
+                        c.setFont("Helvetica", 10)
+                        c.drawString(3.0*cm, 2.0*cm, str(row.get(c_ngay, '')))
+
+                        # Dong cuoi
+                        c.setFont("Helvetica-Bold", 9)
+                        c.drawString(0.4*cm, 0.6*cm, str(row.get(c_ma_sp, '')))
+                        c.drawRightString(width-0.4*cm, 0.6*cm, str(row.get(c_ten_sp, '')))
+
+                        c.showPage()
+
+                c.save()
+                st.download_button("📥 TAI PDF", buffer.getvalue(), "Tem_Giao_Hang.pdf")
+
+        except Exception as e:
+            st.error(f"Loi: {e}")
