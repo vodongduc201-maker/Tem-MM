@@ -10,8 +10,13 @@ def remove_accents(input_str):
     nfkd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).replace('đ', 'd').replace('Đ', 'D')
 
-st.set_page_config(page_title="In Tem 2x4 Inch - Team MT", page_icon="🏷️")
+st.set_page_config(page_title="In Tem Team MT - Chuong Duong", page_icon="🏷️")
 st.title("🏷️ In Tem: Tem MM in 1 lan")
+
+# --- SIDEBAR: THÊM OPTION KHUYẾN MÃI ---
+st.sidebar.image("https://raw.githubusercontent.com/vodongduc201-maker/logo/main/LON_S%C3%81_X%E1%BB%8A_320_ml-removebg-preview.png", use_container_width=True)
+st.sidebar.markdown("---")
+is_khuyen_mai = st.sidebar.checkbox("🎁 Day la hang KHUYEN MAI")
 
 uploaded_file = st.file_uploader("Tai file Excel (Sheet: TEM MM)", type=['xlsx'])
 
@@ -42,8 +47,7 @@ if uploaded_file:
         if data_rows:
             df_final = pd.DataFrame(data_rows)
             po_totals = df_final.groupby('PO')['SO_KIEN_SP'].sum().to_dict()
-
-            st.success(f"✅ Da san sang in {len(df_final)} dong SP.")
+            st.success(f"✅ San sang in {len(df_final)} dong SP.")
             
             if st.button("🚀 XUAT PDF"):
                 buffer = io.BytesIO()
@@ -53,14 +57,15 @@ if uploaded_file:
                 for _, row in df_final.iterrows():
                     po_id = row['PO']
                     tong_kien_po = po_totals[po_id]
-                    if po_id not in current_po_tracker:
-                        current_po_tracker[po_id] = 1
+                    if po_id not in current_po_tracker: current_po_tracker[po_id] = 1
                     
                     for _ in range(row['SO_KIEN_SP']):
-                        c.setLineWidth(1)
+                        # Khung bao (Nếu KM thì nét vẽ dày hơn cho nổi)
+                        c.setLineWidth(1.5 if is_khuyen_mai else 1)
                         c.rect(0.1*inch, 0.1*inch, 3.8*inch, 1.8*inch)
                         c.line(0.1*inch, 0.55*inch, 3.9*inch, 0.55*inch)
                         
+                        # Nội dung chính
                         c.setFont("Helvetica-Bold", 9)
                         c.drawString(0.2*inch, 1.65*inch, "NCC:")
                         c.drawString(0.2*inch, 1.38*inch, "NHAN:")
@@ -80,6 +85,13 @@ if uploaded_file:
                         c.setFont("Helvetica", 9)
                         c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
                         
+                        # --- XỬ LÝ TEM KHUYẾN MÃI ---
+                        if is_khuyen_mai:
+                            # Thêm chữ KM góc trên bên phải
+                            c.setFont("Helvetica-Bold", 14)
+                            c.drawRightString(3.8*inch, 1.65*inch, "KHUYEN MAI")
+                        
+                        # Dòng sản phẩm (vẫn to như cũ)
                         c.setFont("Helvetica-Bold", 10) 
                         c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
@@ -87,7 +99,6 @@ if uploaded_file:
                         current_po_tracker[po_id] += 1 
                         
                 c.save()
-                # --- ĐỔI TÊN FILE TẠI ĐÂY ---
                 st.download_button("📥 TAI PDF", buffer.getvalue(), "Tem MM in 1 lan.pdf")
         else:
             st.error("❌ Khong co du lieu.")
