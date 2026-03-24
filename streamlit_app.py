@@ -72,21 +72,16 @@ if uploaded_file:
 
                 for _, row in df_gop.iterrows():
                     tk = int(row[c_kien])
-                    # Tao chuoi PO gop: MA_NCC/MA_ST. SO_PO
-                    po_display = f"{row.get(c_ma_ncc, '')}/{row.get(c_ma_st, '')}. {row.get(c_po, '')}"
+                    po_val = row.get(c_po, '')
+                    ma_ncc_val = row.get(c_ma_ncc, '')
+                    ma_st_val = row.get(c_ma_st, '')
+                    po_display = f"{ma_ncc_val}/{ma_st_val}. {po_val}"
 
                     for i in range(1, tk + 1):
-                        # Khung hinh nhat ngoai cung
+                        # Ve khung
                         c.setLineWidth(1)
                         c.rect(0.2*cm, 0.2*cm, width-0.4*cm, height-0.4*cm)
-                        
-                        # Cac duong ke chia o
                         c.line(0.2*cm, 1.4*cm, width-0.2*cm, 1.4*cm)
                         c.line(2.8*cm, 1.4*cm, 2.8*cm, height-0.2*cm)
 
-                        # Labels (Ben trai)
-                        c.setFont("Helvetica-Bold", 8)
-                        c.drawString(0.4*cm, 5.2*cm, "NCC")
-                        c.drawString(0.4*cm, 4.4*cm, "NOI NHAN")
-                        c.drawString(0.4*cm, 3.6*cm, "SO PO :")
-                        c.drawString(0.4*cm, 2.8*cm, "KIEN SO :")
+                        #
