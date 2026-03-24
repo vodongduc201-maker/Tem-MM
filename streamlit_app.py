@@ -10,13 +10,13 @@ def remove_accents(input_str):
     nfkd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).replace('đ', 'd').replace('Đ', 'D')
 
-st.set_page_config(page_title="In Tem Team MT - Chuong Duong", page_icon="🏷️")
+st.set_page_config(page_title="In Tem 2x4 Inch - Team MT", page_icon="🏷️")
 st.title("🏷️ In Tem: Tem MM in 1 lan")
 
-# --- SIDEBAR: THÊM OPTION KHUYẾN MÃI ---
+# --- SIDEBAR ---
 st.sidebar.image("https://raw.githubusercontent.com/vodongduc201-maker/logo/main/LON_S%C3%81_X%E1%BB%8A_320_ml-removebg-preview.png", use_container_width=True)
 st.sidebar.markdown("---")
-is_khuyen_mai = st.sidebar.checkbox("🎁 Day la hang KHUYEN MAI")
+is_khuyen_mai = st.sidebar.checkbox("🎁 Hang KHUYEN MAI")
 
 uploaded_file = st.file_uploader("Tai file Excel (Sheet: TEM MM)", type=['xlsx'])
 
@@ -60,12 +60,12 @@ if uploaded_file:
                     if po_id not in current_po_tracker: current_po_tracker[po_id] = 1
                     
                     for _ in range(row['SO_KIEN_SP']):
-                        # Khung bao (Nếu KM thì nét vẽ dày hơn cho nổi)
-                        c.setLineWidth(1.5 if is_khuyen_mai else 1)
+                        # Khung bao tieu chuan
+                        c.setLineWidth(1)
                         c.rect(0.1*inch, 0.1*inch, 3.8*inch, 1.8*inch)
                         c.line(0.1*inch, 0.55*inch, 3.9*inch, 0.55*inch)
                         
-                        # Nội dung chính
+                        # Thong tin chung
                         c.setFont("Helvetica-Bold", 9)
                         c.drawString(0.2*inch, 1.65*inch, "NCC:")
                         c.drawString(0.2*inch, 1.38*inch, "NHAN:")
@@ -85,13 +85,12 @@ if uploaded_file:
                         c.setFont("Helvetica", 9)
                         c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
                         
-                        # --- XỬ LÝ TEM KHUYẾN MÃI ---
+                        # --- CHU KHUYEN MAI NHO LAI ---
                         if is_khuyen_mai:
-                            # Thêm chữ KM góc trên bên phải
-                            c.setFont("Helvetica-Bold", 14)
-                            c.drawRightString(3.8*inch, 1.65*inch, "KHUYEN MAI")
+                            c.setFont("Helvetica-Bold", 10) # Giam xuong size 10
+                            c.drawRightString(3.8*inch, 1.65*inch, "(KHUYEN MAI)")
                         
-                        # Dòng sản phẩm (vẫn to như cũ)
+                        # Dong san pham (size 10 Bold)
                         c.setFont("Helvetica-Bold", 10) 
                         c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
