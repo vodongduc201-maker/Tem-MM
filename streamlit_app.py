@@ -19,9 +19,9 @@ uploaded_file = st.file_uploader("Tai file Excel", type=['xlsx'])
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
     
-    # 1. Chuan hoa ten cot: Xoa dau va Viet hoa
+    # 1. Chuan hoa ten cot
     df.columns = [remove_accents(str(col)).strip().upper() for col in df.columns]
-    # 2. Chuan hoa noi dung: Xoa dau
+    # 2. Chuan hoa noi dung
     df = df.astype(str).applymap(remove_accents)
 
     # 3. Tim cot thong minh
@@ -69,11 +69,20 @@ if uploaded_file:
                 for _, row in df_gop.iterrows():
                     tk = int(row[c_kien])
                     for i in range(1, tk + 1):
+                        # Ve khung
                         c.setLineWidth(1)
                         c.rect(0.2*cm, 0.2*cm, width-0.4*cm, height-0.4*cm)
                         c.line(0.2*cm, 1.4*cm, width-0.2*cm, 1.4*cm) 
                         c.line(2.8*cm, 1.4*cm, 2.8*cm, height-0.2*cm) 
 
+                        # Dien nhãn
                         c.setFont("Helvetica-Bold", 8)
                         c.drawString(0.4*cm, 5.2*cm, "NCC")
-                        c.drawString(0.4*cm, 4.4*cm
+                        c.drawString(0.4*cm, 4.4*cm, "NOI NHAN")
+                        c.drawString(0.4*cm, 3.6*cm, "SO PO:")
+                        c.drawString(0.4*cm, 2.8*cm, "KIEN SO:")
+                        c.drawString(0.4*cm, 2.0*cm, "NGAY GIAO:")
+
+                        # Dien du lieu
+                        c.setFont("Helvetica", 9)
+                        c.drawString(3.0*cm, 5.2*cm, str(row
