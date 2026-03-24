@@ -11,7 +11,7 @@ def remove_accents(input_str):
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).replace('đ', 'd').replace('Đ', 'D')
 
 st.set_page_config(page_title="In Tem 2x4 Inch - Team MT", page_icon="🏷️")
-st.title("🏷️ In Tem Nhiet: 2x4 Inch - Chu SP To")
+st.title("🏷️ In Tem: Tem MM in 1 lan")
 
 uploaded_file = st.file_uploader("Tai file Excel (Sheet: TEM MM)", type=['xlsx'])
 
@@ -45,7 +45,7 @@ if uploaded_file:
 
             st.success(f"✅ Da san sang in {len(df_final)} dong SP.")
             
-            if st.button("🚀 XUAT PDF 2x4 INCH"):
+            if st.button("🚀 XUAT PDF"):
                 buffer = io.BytesIO()
                 c = canvas.Canvas(buffer, pagesize=(4*inch, 2*inch))
                 current_po_tracker = {} 
@@ -57,13 +57,10 @@ if uploaded_file:
                         current_po_tracker[po_id] = 1
                     
                     for _ in range(row['SO_KIEN_SP']):
-                        # Khung bao ngoai
                         c.setLineWidth(1)
                         c.rect(0.1*inch, 0.1*inch, 3.8*inch, 1.8*inch)
-                        # Duong ke ngang (nang len mot chut de dong SP rong hon)
                         c.line(0.1*inch, 0.55*inch, 3.9*inch, 0.55*inch)
                         
-                        # --- Phan thong tin tren ---
                         c.setFont("Helvetica-Bold", 9)
                         c.drawString(0.2*inch, 1.65*inch, "NCC:")
                         c.drawString(0.2*inch, 1.38*inch, "NHAN:")
@@ -78,23 +75,20 @@ if uploaded_file:
                         c.setFont("Helvetica", 9)
                         c.drawString(0.95*inch, 1.11*inch, f"{row['MA_NCC']}/{row['MA_ST']}. {po_id}")
                         
-                        # Kien so va Ngay
                         c.setFont("Helvetica-Bold", 11)
                         c.drawString(0.75*inch, 0.84*inch, f"{current_po_tracker[po_id]} / {tong_kien_po}")
                         c.setFont("Helvetica", 9)
                         c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
                         
-                        # --- CAP NHAT: TANG SIZE CHU SAN PHAM ---
-                        # Tang tu size 8 len size 10 va in dam (Bold)
                         c.setFont("Helvetica-Bold", 10) 
-                        # Toa do y=0.25 inch de chu nam giua o duoi
                         c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
                         c.showPage()
                         current_po_tracker[po_id] += 1 
                         
                 c.save()
-                st.download_button("📥 TAI PDF", buffer.getvalue(), "Tem_MT_2x4_To.pdf")
+                # --- ĐỔI TÊN FILE TẠI ĐÂY ---
+                st.download_button("📥 TAI PDF", buffer.getvalue(), "Tem MM in 1 lan.pdf")
         else:
             st.error("❌ Khong co du lieu.")
     except Exception as e:
