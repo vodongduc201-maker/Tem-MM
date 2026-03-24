@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch # Chuyển sang dùng đơn vị inch
+from reportlab.lib.units import inch
 import io
 import unicodedata
 
@@ -11,7 +11,7 @@ def remove_accents(input_str):
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).replace('đ', 'd').replace('Đ', 'D')
 
 st.set_page_config(page_title="In Tem 2x4 Inch - Team MT", page_icon="🏷️")
-st.title("🏷️ In Tem Nhiet: Kho 2x4 Inch")
+st.title("🏷️ In Tem Nhiet: 2x4 Inch - Chu SP To")
 
 uploaded_file = st.file_uploader("Tai file Excel (Sheet: TEM MM)", type=['xlsx'])
 
@@ -43,13 +43,11 @@ if uploaded_file:
             df_final = pd.DataFrame(data_rows)
             po_totals = df_final.groupby('PO')['SO_KIEN_SP'].sum().to_dict()
 
-            st.success(f"✅ San sang in {len(df_final)} dong SP tren kho 2x4 inch.")
+            st.success(f"✅ Da san sang in {len(df_final)} dong SP.")
             
-            if st.button("🚀 XUAT FILE PDF 2x4 INCH"):
+            if st.button("🚀 XUAT PDF 2x4 INCH"):
                 buffer = io.BytesIO()
-                # THIẾT LẬP KHỔ TRANG: Ngang 4 inch, Cao 2 inch
                 c = canvas.Canvas(buffer, pagesize=(4*inch, 2*inch))
-                
                 current_po_tracker = {} 
 
                 for _, row in df_final.iterrows():
@@ -59,45 +57,45 @@ if uploaded_file:
                         current_po_tracker[po_id] = 1
                     
                     for _ in range(row['SO_KIEN_SP']):
-                        # Khung bao ngoài sát lề (cách lề 0.05 inch)
+                        # Khung bao ngoai
                         c.setLineWidth(1)
-                        c.rect(0.05*inch, 0.05*inch, 3.9*inch, 1.9*inch)
-                        # Đường kẻ ngang phía trên mã SP
-                        c.line(0.05*inch, 0.45*inch, 3.95*inch, 0.45*inch)
+                        c.rect(0.1*inch, 0.1*inch, 3.8*inch, 1.8*inch)
+                        # Duong ke ngang (nang len mot chut de dong SP rong hon)
+                        c.line(0.1*inch, 0.55*inch, 3.9*inch, 0.55*inch)
                         
-                        # Nội dung chính - Căn chỉnh lại tọa độ theo inch
+                        # --- Phan thong tin tren ---
                         c.setFont("Helvetica-Bold", 9)
-                        c.drawString(0.15*inch, 1.7*inch, "NCC:")
-                        c.drawString(0.15*inch, 1.4*inch, "NHAN:")
-                        c.drawString(0.15*inch, 1.1*inch, "SO PO:")
-                        c.drawString(0.15*inch, 0.8*inch, "KIEN SO:")
-                        c.drawString(2.2*inch, 0.8*inch, "NGAY:") # Đưa ngày sang bên cạnh Kiện số cho gọn
+                        c.drawString(0.2*inch, 1.65*inch, "NCC:")
+                        c.drawString(0.2*inch, 1.38*inch, "NHAN:")
+                        c.drawString(0.2*inch, 1.11*inch, "SO PO:")
+                        c.drawString(0.2*inch, 0.84*inch, "KIEN:")
+                        c.drawString(2.1*inch, 0.84*inch, "NGAY:")
                         
                         c.setFont("Helvetica", 9)
-                        c.drawString(0.7*inch, 1.7*inch, row['NCC'])
-                        
+                        c.drawString(0.75*inch, 1.65*inch, row['NCC'])
                         c.setFont("Helvetica-Bold", 11)
-                        c.drawString(0.8*inch, 1.4*inch, row['NHAN'])
-                        
+                        c.drawString(0.85*inch, 1.38*inch, row['NHAN'])
                         c.setFont("Helvetica", 9)
-                        c.drawString(0.9*inch, 1.1*inch, f"{row['MA_NCC']}/{row['MA_ST']}. {po_id}")
+                        c.drawString(0.95*inch, 1.11*inch, f"{row['MA_NCC']}/{row['MA_ST']}. {po_id}")
                         
-                        # Kiện số và Ngày giao cùng hàng
+                        # Kien so va Ngay
                         c.setFont("Helvetica-Bold", 11)
-                        c.drawString(1.0*inch, 0.8*inch, f"{current_po_tracker[po_id]} / {tong_kien_po}")
+                        c.drawString(0.75*inch, 0.84*inch, f"{current_po_tracker[po_id]} / {tong_kien_po}")
                         c.setFont("Helvetica", 9)
-                        c.drawString(2.8*inch, 0.8*inch, row['NGAY'])
+                        c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
                         
-                        # Thông tin SP ở dưới cùng
-                        c.setFont("Helvetica-Bold", 8)
-                        c.drawString(0.15*inch, 0.2*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
+                        # --- CAP NHAT: TANG SIZE CHU SAN PHAM ---
+                        # Tang tu size 8 len size 10 va in dam (Bold)
+                        c.setFont("Helvetica-Bold", 10) 
+                        # Toa do y=0.25 inch de chu nam giua o duoi
+                        c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
                         c.showPage()
                         current_po_tracker[po_id] += 1 
                         
                 c.save()
-                st.download_button("📥 TAI PDF 2x4 INCH", buffer.getvalue(), "Tem_MT_2x4.pdf")
+                st.download_button("📥 TAI PDF", buffer.getvalue(), "Tem_MT_2x4_To.pdf")
         else:
-            st.error("❌ Khong tim thay du lieu.")
+            st.error("❌ Khong co du lieu.")
     except Exception as e:
         st.error(f"Loi: {str(e)}")
