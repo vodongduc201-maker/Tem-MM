@@ -16,13 +16,18 @@ uploaded_file = st.file_uploader("Tai file Excel", type=['xlsx'])
 
 if uploaded_file:
     try:
-        # Đọc file và ép lấy 10 cột đầu tiên (A đến J)
-        df = pd.read_excel(uploaded_file, header=None).iloc[:, :10]
+        # Đọc toàn bộ file, không lấy header
+        df = pd.read_excel(uploaded_file, header=None)
+        
+        # SỬA LỖI 4: Nếu file thiếu cột, tự động bù thêm cột trống cho đủ 10 cột (A-J)
+        while len(df.columns) < 10:
+            df[len(df.columns)] = ""
         
         data_rows = []
         for _, row in df.iterrows():
-            # Bỏ qua dòng tiêu đề
-            if "NCC" in str(row[0]).upper() or pd.isna(row[4]):
+            # Bỏ qua dòng tiêu đề dựa trên cột A hoặc E
+            val_a = str(row[0]).upper()
+            if "NCC" in val_a or "PO" in str(row[4]).upper() or pd.isna(row[4]):
                 continue
             
             data_rows.append({
@@ -30,23 +35,24 @@ if uploaded_file:
                 'NHAN': remove_accents(str(row[1])),      # Cột B
                 'MA_NCC': str(row[2]),                   # Cột C
                 'MA_ST': str(row[3]),                    # Cột D
-                'PO': str(row[4]),                       # Cột E
+                'PO': str(row[4]),                       # Cột E (Index 4)
                 'MA_SP': str(row[5]),                    # Cột F
                 'TEN_SP': remove_accents(str(row[6])),   # Cột G
-                'TONG_KIEN': int(float(row[8])) if pd.notnull(row[8]) else 1, # Cột I
+                'TONG_KIEN': int(float(row[8])) if str(row[8]).replace('.','').isdigit() else 1, # Cột I
                 'NGAY': str(row[9])                      # Cột J
             })
 
         if data_rows:
             df_final = pd.DataFrame(data_rows)
-            # Gộp các dòng trùng PO để in theo bộ kiện
+            # Gộp PO: Nếu trùng PO thì lấy số kiện lớn nhất
             df_gop = df_final.groupby(['PO', 'MA_NCC', 'MA_ST', 'NCC', 'NHAN', 'NGAY'], as_index=False).agg({
                 'TONG_KIEN': 'max', 'MA_SP': 'first', 'TEN_SP': 'first'
             })
 
-            st.success(f"Da nhan dien {len(df_gop)} PO.")
+            st.success(f"✅ Da tim thay {len(df_gop)} PO.")
+            st.dataframe(df_gop[['PO', 'NHAN', 'TONG_KIEN']])
             
-            if st.button("🚀 XUAT PDF"):
+            if st.button("🚀 XUAT FILE PDF"):
                 buffer = io.BytesIO()
                 c = canvas.Canvas(buffer, pagesize=(10*cm, 6*cm))
                 for _, row in df_gop.iterrows():
@@ -63,6 +69,9 @@ if uploaded_file:
                         c.drawString(0.5*cm, 0.5*cm, f"{row['MA_SP']} - {row['TEN_SP']}")
                         c.showPage()
                 c.save()
-                st.download_button("📥 Tai file PDF", buffer.getvalue(), "Tem_MT.pdf")
+                st.download_button("📥 Tai file PDF", buffer.getvalue(), "Tem_MT_Fixed.pdf")
+        else:
+            st.warning("Khong tim thay du lieu trong file. Hay kiem tra lai cot E (Số PO).")
+            
     except Exception as e:
         st.error(f"Loi: {str(e)}")
