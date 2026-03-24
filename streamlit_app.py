@@ -1,35 +1,11 @@
-import streamlit as st
-import pandas as pd
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-import io
-import os
-
-st.set_page_config(page_title="Tem Chương Dương MT", page_icon="🥤")
-st.title("🏷️ Hệ Thống In Tem Tự Động - Team MT")
-
-# --- CẤU HÌNH FONT TIẾNG VIỆT ---
-# Đảm bảo bạn đã upload file 'Arial.ttf' lên cùng thư mục trên GitHub
-font_path = "Arial.ttf" 
-if os.path.exists(font_path):
-    pdfmetrics.registerFont(TTFont('Arial-Viet', font_path))
-    font_main = "Arial-Viet"
-else:
-    st.warning("⚠️ Không tìm thấy file Arial.ttf trên GitHub. Hệ thống sẽ dùng font mặc định (lỗi dấu).")
-    font_main = "Helvetica"
-
-uploaded_file = st.file_uploader("Tải file Excel dữ liệu (Dòng hàng & Tổng kiện)", type=['xlsx'])
-
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
+    
+    # CHỈNH SỬA TÊN CỘT: Xóa khoảng trắng thừa và viết hoa để khớp với code
+    df.columns = [str(col).strip().upper() for col in df.columns]
+    
     st.success(f"Đã nhận dữ liệu từ {len(df)} dòng hàng.")
-
-    # Tùy chỉnh kích thước tem (thường là 10x6 hoặc 10x15 cho máy in nhiệt)
-    col1, col2 = st.columns(2)
-    w_cm = col1.number_input("Rộng (cm)", value=10.0)
-    h_cm = col2.number_input("Cao (cm)", value=6.0)
+    st.write("Các cột hiện có trong file của bạn:", list(df.columns))
 
     if st.button("🔥 XUẤT FILE PDF IN TEM"):
         buffer = io.BytesIO()
@@ -37,55 +13,42 @@ if uploaded_file:
         c = canvas.Canvas(buffer, pagesize=(width, height))
 
         for index, row in df.iterrows():
-            # Lấy số kiện từ cột 'TỔNG SỐ KIỆN'
+            # Tự động tìm số kiện (viết hoa cột để khớp)
             try:
-                tong_kien = int(row['TỔNG SỐ KIỆN'])
+                tong_kien = int(row.get('TỔNG SỐ KIỆN', row.get('TONG SO KIEN', 1)))
             except:
                 tong_kien = 1
             
-            # VÒNG LẶP TẠO TEM THEO SỐ KIỆN
             for i in range(1, tong_kien + 1):
-                # 1. Vẽ khung viền & đường kẻ
-                c.setLineWidth(1)
-                c.rect(0.2*cm, 0.2*cm, width-0.4*cm, height-0.4*cm)
-                c.line(0.2*cm, 1.4*cm, width-0.2*cm, 1.4*cm) # Ngang cuối
-                c.line(2.8*cm, 1.4*cm, 2.8*cm, height-0.2*cm) # Dọc trái
+                # ... (giữ nguyên phần vẽ khung) ...
+                
+                # Sửa lại cách lấy dữ liệu để không bị lỗi KeyError
+                # Sử dụng .get() để nếu không thấy cột thì trả về khoảng trắng thay vì báo lỗi
+                ncc = str(row.get('NCC', ''))
+                noi_nhan = str(row.get('NOI NHẬN', row.get('NƠI NHẬN', '')))
+                so_po = str(row.get('SỐ PO :', row.get('SO PO', '')))
+                ngay_giao = str(row.get('NGAY GIAO :', row.get('NGÀY GIAO', '')))
+                ma_hang = str(row.get('MÃ SẢN PHẨM', row.get('MA SAN PHAM', '')))
+                ten_hang = str(row.get('TÊN SẢN PHẨM', row.get('TEN SAN PHAM', '')))
 
-                # 2. Điền tiêu đề cố định
-                c.setFont(font_main, 8)
-                labels = [("NCC", 5.2), ("NƠI NHẬN", 4.4), ("SỐ PO:", 3.6), ("KIỆN SỐ:", 2.8), ("NGÀY GIAO:", 2.0)]
-                for txt, y_pos in labels:
-                    c.drawString(0.4*cm, y_pos*cm, txt)
-
-                # 3. Điền dữ liệu từ Excel (Dùng font tiếng Việt)
+                # Điền dữ liệu vào tem
                 c.setFont(font_main, 9)
-                c.drawString(3.2*cm, 5.2*cm, str(row['NCC']))
+                c.drawString(3.2*cm, 5.2*cm, ncc)
                 
-                c.setFont(font_main, 11) # Nơi nhận in đậm/to hơn
-                c.drawString(3.2*cm, 4.4*cm, str(row['NOI NHẬN']))
+                c.setFont(font_main, 11)
+                c.drawString(3.2*cm, 4.4*cm, noi_nhan)
                 
                 c.setFont(font_main, 9)
-                c.drawString(3.2*cm, 3.6*cm, str(row['SỐ PO :']))
+                c.drawString(3.2*cm, 3.6*cm, so_po)
                 
-                # Kiện số tự động nhảy: 1/10, 2/10...
                 c.setFont(font_main, 12)
                 c.drawString(3.2*cm, 2.8*cm, f"{i}  /  {tong_kien}")
                 
                 c.setFont(font_main, 10)
-                c.drawString(3.2*cm, 2.0*cm, str(row['NGAY GIAO :']))
+                c.drawString(3.2*cm, 2.0*cm, ngay_giao)
 
-                # 4. Dòng cuối: Mã & Tên sản phẩm
                 c.setFont(font_main, 10)
-                c.drawString(0.4*cm, 0.6*cm, str(row['MÃ SẢN PHẨM']))
-                c.drawRightString(width-0.4*cm, 0.6*cm, str(row['TÊN SẢN PHẨM']))
+                c.drawString(0.4*cm, 0.6*cm, ma_hang)
+                c.drawRightString(width-0.4*cm, 0.6*cm, ten_hang)
 
-                c.showPage() # Kết thúc 1 con tem
-
-        c.save()
-        st.balloons()
-        st.download_button(
-            label="📥 TẢI FILE PDF (SẴN SÀNG IN)",
-            data=buffer.getvalue(),
-            file_name="Tem_Giao_Hang_Chương_Dương.pdf",
-            mime="application/pdf"
-        )
+                c.showPage()
