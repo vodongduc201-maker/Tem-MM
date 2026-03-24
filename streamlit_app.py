@@ -81,23 +81,21 @@ if uploaded_file:
                         c.setFont("Helvetica-Bold", 11)
                         c.drawString(0.75*inch, 0.84*inch, f"{current_po_tracker[po_id]} / {tong_kien_po}")
 
-                        # --- LOGIC DIEU KIEN MOI ---
+                        # --- LOGIC HIEN THI THEO LOAI HANG ---
                         if is_khuyen_mai:
-                            # 1. Hang Khuyen Mai: Bo ngay, hien nhan KM, bo Ten SP
+                            # Hang Khuyen Mai: Bo ngay, hien nhãn KM
                             c.setFont("Helvetica-Bold", 10)
                             c.drawRightString(3.8*inch, 0.84*inch, "(KHUYEN MAI)")
-                            
-                            c.setFont("Helvetica-Bold", 11)
-                            c.drawString(0.2*inch, 0.25*inch, f"MA SP: {row['MA_SP']}")
                         else:
-                            # 2. Hang Thuong: Hien ngay, hien Ma SP + Ten SP
+                            # Hang Thuong: Hien ngay giao
                             c.setFont("Helvetica-Bold", 9)
                             c.drawString(2.1*inch, 0.84*inch, "NGAY:")
                             c.setFont("Helvetica", 9)
                             c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
-                            
-                            c.setFont("Helvetica-Bold", 10) 
-                            c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
+                        
+                        # LUON HIEN DAY DU MA SP + TEN SP (Dòng dưới cùng)
+                        c.setFont("Helvetica-Bold", 10) 
+                        c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
                         c.showPage()
                         current_po_tracker[po_id] += 1 
