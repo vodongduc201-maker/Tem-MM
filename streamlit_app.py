@@ -38,7 +38,7 @@ if uploaded_file:
                         'MA_ST': str(row[3]),
                         'PO': str(row[4]).strip(),
                         'MA_SP': str(row[5]),
-                        'TEN_SP': remove_accents(str(row[6])),
+                        'TEN_SP': remove_accents(str(row[6])), 
                         'SO_KIEN_SP': int(float(row[8])) if str(row[8]).replace('.','').isdigit() else 1,
                         'NGAY': str(row[9])
                     })
@@ -60,18 +60,16 @@ if uploaded_file:
                     if po_id not in current_po_tracker: current_po_tracker[po_id] = 1
                     
                     for _ in range(row['SO_KIEN_SP']):
-                        # Khung bao tieu chuan
                         c.setLineWidth(1)
                         c.rect(0.1*inch, 0.1*inch, 3.8*inch, 1.8*inch)
                         c.line(0.1*inch, 0.55*inch, 3.9*inch, 0.55*inch)
                         
-                        # Thong tin chung
+                        # Thong tin co ban
                         c.setFont("Helvetica-Bold", 9)
                         c.drawString(0.2*inch, 1.65*inch, "NCC:")
                         c.drawString(0.2*inch, 1.38*inch, "NHAN:")
                         c.drawString(0.2*inch, 1.11*inch, "SO PO:")
                         c.drawString(0.2*inch, 0.84*inch, "KIEN:")
-                        c.drawString(2.1*inch, 0.84*inch, "NGAY:")
                         
                         c.setFont("Helvetica", 9)
                         c.drawString(0.75*inch, 1.65*inch, row['NCC'])
@@ -82,17 +80,24 @@ if uploaded_file:
                         
                         c.setFont("Helvetica-Bold", 11)
                         c.drawString(0.75*inch, 0.84*inch, f"{current_po_tracker[po_id]} / {tong_kien_po}")
-                        c.setFont("Helvetica", 9)
-                        c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
-                        
-                        # --- CHU KHUYEN MAI NHO LAI ---
+
+                        # --- LOGIC DIEU KIEN MOI ---
                         if is_khuyen_mai:
-                            c.setFont("Helvetica-Bold", 10) # Giam xuong size 10
-                            c.drawRightString(3.8*inch, 1.65*inch, "(KHUYEN MAI)")
-                        
-                        # Dong san pham (size 10 Bold)
-                        c.setFont("Helvetica-Bold", 10) 
-                        c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
+                            # 1. Hang Khuyen Mai: Bo ngay, hien nhan KM, bo Ten SP
+                            c.setFont("Helvetica-Bold", 10)
+                            c.drawRightString(3.8*inch, 0.84*inch, "(KHUYEN MAI)")
+                            
+                            c.setFont("Helvetica-Bold", 11)
+                            c.drawString(0.2*inch, 0.25*inch, f"MA SP: {row['MA_SP']}")
+                        else:
+                            # 2. Hang Thuong: Hien ngay, hien Ma SP + Ten SP
+                            c.setFont("Helvetica-Bold", 9)
+                            c.drawString(2.1*inch, 0.84*inch, "NGAY:")
+                            c.setFont("Helvetica", 9)
+                            c.drawString(2.7*inch, 0.84*inch, row['NGAY'])
+                            
+                            c.setFont("Helvetica-Bold", 10) 
+                            c.drawString(0.2*inch, 0.25*inch, f"SP: {row['MA_SP']} - {row['TEN_SP']}")
                         
                         c.showPage()
                         current_po_tracker[po_id] += 1 
