@@ -5,7 +5,6 @@ from reportlab.lib.units import cm
 import io
 import unicodedata
 
-# Hàm xóa dấu tiếng Việt
 def remove_accents(input_str):
     if not isinstance(input_str, str): return str(input_str)
     nfkd_form = unicodedata.normalize('NFKD', input_str)
@@ -17,67 +16,54 @@ st.title("🏷️ He Thong In Tem Tu Dong - Team MT")
 uploaded_file = st.file_uploader("Tai file Excel du lieu", type=['xlsx'])
 
 if uploaded_file:
-    # Đọc file Excel
-    df = pd.read_excel(uploaded_file)
+    # DOC FILE: Khong lay dong dau lam tieu de de tranh loi thieu Header
+    df = pd.read_excel(uploaded_file, header=None)
     
-    # 1. Lưu lại tên cột gốc để báo lỗi nếu cần
-    original_cols = df.columns.tolist()
+    st.warning("⚠️ He thong dang doc file theo thu tu cot (vi file cua ban thieu tieu de).")
     
-    # 2. Chuẩn hóa tên cột để máy dễ đọc
-    df.columns = [remove_accents(str(col)).strip().upper() for col in df.columns]
+    # Hien thi thu tu cot de user kiem tra
+    with st.expander("Xem thu tu cot du lieu"):
+        st.write(df.head(3))
 
-    # 3. Hàm dò tìm cột linh hoạt (Chỉ cần CHỨA từ khóa là lấy)
-    def find_col_flexible(keywords):
-        for col in df.columns:
-            if any(key in col for key in keywords):
-                return col
-        return None
-
-    # Tìm kiếm các cột quan trọng
-    c_po = find_col_flexible(['SO PO', 'PO'])
-    c_kien_tong = find_col_flexible(['TONG SO KIEN', 'TONG KIEN', 'KIEN'])
-    c_ncc = find_col_flexible(['NCC'])
-    c_nhan = find_col_flexible(['NOI NHAN', 'NHAN'])
-    c_ma_ncc = find_col_flexible(['MA NCC'])
-    c_ma_st = find_col_flexible(['MA SIEU THI', 'MA ST'])
-    c_ma_sp = find_col_flexible(['MA SAN PHAM', 'MA SP', 'MA HANG'])
-    c_ten_sp = find_col_flexible(['TEN SAN PHAM', 'TEN SP', 'TEN HANG'])
-    c_ngay = find_col_flexible(['NGAY'])
-
-    # KIỂM TRA LỖI VÀ HIỂN THỊ HƯỚNG DẪN
-    if not c_po or not c_kien_tong:
-        st.error("❌ KHÔNG TÌM THẤY CỘT 'SỐ PO' HOẶC 'TỔNG SỐ KIỆN'!")
-        st.warning(f"Cột máy nhận được: {original_cols}")
-        st.info("💡 Mẹo: Bạn hãy kiểm tra lại dòng đầu tiên trong file Excel xem đã có tiêu đề chưa nhé.")
+    # KIEM TRA SO LUONG COT (File anh cua ban co khoang 11 cot)
+    if len(df.columns) < 5:
+        st.error("❌ File Excel qua it cot, khong du du lieu de in tem!")
     else:
         try:
-            # Thông báo cho người dùng biết máy đã nhận diện đúng
-            st.success(f"✅ Đã tìm thấy: Cột PO ({c_po}) và Cột Số Kiện ({c_kien_tong})")
-
-            # Xử lý ngày tháng
-            df[c_ngay] = pd.to_datetime(df[c_ngay], errors='coerce').dt.strftime('%d/%m/%Y')
+            # Gan ten cot theo thu tu (Dua tren anh mau ban gui)
+            # Cot: 0:NCC, 1:Noi Nhan, 2:Ma NCC, 3:Ma ST, 4:PO, 5:Ma SP, 6:Ten SP, 7:Kien So, 8:Tong Kien, 9:Ngay
             
-            # Xóa dấu nội dung
+            # Chuan hoa du lieu (Xoa dau)
             df = df.astype(str).applymap(remove_accents)
-            
-            # Chuyển số kiện sang dạng số
-            df[c_kien_tong] = pd.to_numeric(df[c_kien_tong], errors='coerce').fillna(1).astype(int)
 
-            # LOGIC GỘP PO
-            group_list = [c for c in [c_po, c_ma_ncc, c_ma_st, c_ncc, c_nhan, c_ngay] if c is not None]
-            df_gop = df.groupby(group_list, as_index=False).agg({
-                c_kien_tong: 'max', 
-                c_ma_sp: 'first',
-                c_ten_sp: 'first'
+            # Trich xuat cac cot can thiet theo INDEX (vi tri)
+            df_clean = pd.DataFrame()
+            df_clean['NCC'] = df[0]
+            df_clean['NHAN'] = df[1]
+            df_clean['MA_NCC'] = df[2]
+            df_clean['MA_ST'] = df[3]
+            df_clean['PO'] = df[4]
+            df_clean['MA_SP'] = df[5]
+            df_clean['TEN_SP'] = df[6]
+            df_clean['TONG_KIEN'] = pd.to_numeric(df[8], errors='coerce').fillna(1).astype(int)
+            df_clean['NGAY'] = df[9]
+
+            # GOP PO: Neu nhieu dong cung PO thi chi in 1 bo tem voi so kien lon nhat
+            df_gop = df_clean.groupby(['PO', 'MA_NCC', 'MA_ST', 'NCC', 'NHAN', 'NGAY'], as_index=False).agg({
+                'TONG_KIEN': 'max',
+                'MA_SP': 'first',
+                'TEN_SP': 'first'
             })
 
-            if st.button("🚀 XUẤT FILE PDF IN TEM"):
+            st.success(f"✅ Da nhan dien duoc {len(df_gop)} PO.")
+
+            if st.button("🚀 XUAT FILE PDF IN TEM"):
                 buffer = io.BytesIO()
                 c = canvas.Canvas(buffer, pagesize=(10*cm, 6*cm))
 
                 for _, row in df_gop.iterrows():
-                    tk = int(row[c_kien_tong])
-                    po_display = f"{row.get(c_ma_ncc, '')}/{row.get(c_ma_st, '')}. {row.get(c_po, '')}"
+                    tk = int(row['TONG_KIEN'])
+                    po_display = f"{row['MA_NCC']}/{row['MA_ST']}. {row['PO']}"
 
                     for i in range(1, tk + 1):
                         c.setLineWidth(1)
@@ -94,9 +80,9 @@ if uploaded_file:
                         c.drawString(0.4*cm, 2.0*cm, "NGAY GIAO :")
 
                         c.setFont("Helvetica", 9)
-                        c.drawCentredString(6.3*cm, 5.2*cm, str(row.get(c_ncc, '')))
+                        c.drawCentredString(6.3*cm, 5.2*cm, str(row['NCC']))
                         c.setFont("Helvetica-Bold", 11)
-                        c.drawCentredString(6.3*cm, 4.4*cm, str(row.get(c_nhan, '')))
+                        c.drawCentredString(6.3*cm, 4.4*cm, str(row['NHAN']))
                         c.setFont("Helvetica", 10)
                         c.drawCentredString(6.3*cm, 3.6*cm, po_display)
                         
@@ -105,15 +91,15 @@ if uploaded_file:
                         c.drawCentredString(8.0*cm, 2.4*cm, str(tk))
                         
                         c.setFont("Helvetica", 10)
-                        c.drawCentredString(6.3*cm, 1.7*cm, str(row.get(c_ngay, '')))
+                        c.drawCentredString(6.3*cm, 1.7*cm, str(row['NGAY']))
 
                         c.setFont("Helvetica-Bold", 9)
-                        c.drawString(0.6*cm, 0.6*cm, str(row.get(c_ma_sp, '')))
-                        c.drawRightString(9.4*cm, 0.6*cm, str(row.get(c_ten_sp, '')))
+                        c.drawString(0.6*cm, 0.6*cm, str(row['MA_SP']))
+                        c.drawRightString(9.4*cm, 0.6*cm, str(row['TEN_SP']))
                         c.showPage()
 
                 c.save()
-                st.download_button("📥 TẢI FILE PDF", buffer.getvalue(), "Tem_TeamMT_Update.pdf")
+                st.download_button("📥 TAI FILE PDF", buffer.getvalue(), "Tem_TeamMT_Fix.pdf")
 
         except Exception as e:
-            st.error(f"Lỗi xử lý: {e}")
+            st.error(f"Loi: {e}")
